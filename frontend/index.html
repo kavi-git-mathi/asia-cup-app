@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asia Cup 2025</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="header-content">
+        <div class="logo-section">
+            <i class="fas fa-trophy trophy-icon"></i>
+            <h1>Asia Cup 2025</h1>
+        </div>
+        <nav>
+            <a href="#matches" class="nav-link active">
+                <i class="fas fa-calendar-alt"></i> MATCHES
+            </a>
+            <a href="#standings" class="nav-link">
+                <i class="fas fa-list-ol"></i> STANDINGS
+            </a>
+            <a href="#stats" class="nav-link">
+                <i class="fas fa-chart-bar"></i> STATS
+            </a>
+        </nav>
+    </div>
+    <div id="region-info" class="region-info">
+        <i class="fas fa-server"></i> Loading server info...
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <div class="year-selector">
+            <i class="fas fa-calendar"></i>
+            <select id="year-select">
+                <option value="2025" selected>2025</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+            </select>
+        </div>
+
+        <section id="matches" class="section">
+            <h2><i class="fas fa-futbol"></i> UPCOMING MATCHES</h2>
+            <div id="matches-container" class="matches-grid">
+                <div class="loading">Loading matches...</div>
+            </div>
+        </section>
+
+        <section id="standings" class="section">
+            <h2><i class="fas fa-table"></i> TOURNAMENT STANDINGS</h2>
+            <div class="stage-selector">
+                <button class="stage-btn active" data-stage="group">Group Stage</button>
+                <button class="stage-btn" data-stage="super4">Super 4</button>
+                <button class="stage-btn" data-stage="finals">Finals</button>
+            </div>
+            <div id="standings-container" class="table-container">
+                <div class="loading">Loading standings...</div>
+            </div>
+        </section>
+
+        <section id="stats" class="section">
+            <h2><i class="fas fa-chart-line"></i> PLAYER STATISTICS</h2>
+            <div class="stats-tabs">
+                <button class="stat-tab active" data-stat="runs">
+                    <i class="fas fa-running"></i> Top Runs
+                </button>
+                <button class="stat-tab" data-stat="wickets">
+                    <i class="fas fa-baseball-ball"></i> Top Wickets
+                </button>
+                <button class="stat-tab" data-stat="catches">
+                    <i class="fas fa-hand-paper"></i> Top Catches
+                </button>
+            </div>
+            <div id="stats-container" class="table-container">
+                <div class="loading">Loading player stats...</div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer>
+    <div class="footer-content">
+        <p>Asia Cup 2025 &copy; All rights reserved</p>
+        <p class="server-info">
+            <i class="fas fa-globe"></i>
+            <span id="server-region">Server: Loading...</span>
+        </p>
+    </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
