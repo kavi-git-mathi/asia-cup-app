@@ -6,21 +6,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middleware
+// ========== MIDDLEWARE ==========
 app.use(cors({
-    origin: '*', // Or specify your frontend URL
+    origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use('/api', (req, res, next) => {
-    // All /api routes will be handled here
-    next();
-});
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'frontend')));
 
-// Configuration
+// ========== CONFIGURATION ==========
 const APP_ROLE = process.env.APP_ROLE || 'primary';
 const REGION = process.env.WEBSITE_LOCATION || 'Central India';
 
@@ -28,7 +23,7 @@ console.log(`🚀 Asia Cup 2025 Application Starting...`);
 console.log(`📍 Role: ${APP_ROLE.toUpperCase()}`);
 console.log(`🌍 Region: ${REGION}`);
 
-// Database connection pool
+// ========== DATABASE CONNECTION ==========
 let pool = null;
 let isDatabaseConnected = false;
 let isDatabaseReadOnly = false;
@@ -49,18 +44,13 @@ async function initializeDatabase() {
         };
 
         console.log(`🔌 Connecting to database: ${dbConfig.host}`);
-
         pool = mysql.createPool(dbConfig);
 
         // Test connection
         const connection = await pool.getConnection();
-
-        // Check if database is read-only
         const [result] = await connection.query('SELECT @@global.read_only as read_only');
         isDatabaseReadOnly = result[0]?.read_only === 1;
-
         connection.release();
-
         isDatabaseConnected = true;
 
         console.log(`✅ Database connected successfully`);
@@ -68,7 +58,6 @@ async function initializeDatabase() {
 
         // Initialize tables
         await initializeTables();
-
         return true;
     } catch (error) {
         console.error(`❌ Database connection failed:`, error.message);
@@ -82,46 +71,45 @@ async function initializeTables() {
         // Create tables if they don't exist
         await pool.query(`
             CREATE TABLE IF NOT EXISTS GroupMatches (
-                MatchID INT PRIMARY KEY AUTO_INCREMENT,
-                MatchDate DATE NOT NULL,
-                Team1 VARCHAR(100) NOT NULL,
+                                                        MatchID INT PRIMARY KEY AUTO_INCREMENT,
+                                                        MatchDate DATE NOT NULL,
+                                                        Team1 VARCHAR(100) NOT NULL,
                 Team2 VARCHAR(100) NOT NULL,
                 Venue VARCHAR(100),
                 Result VARCHAR(100),
                 Stage VARCHAR(50),
                 CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+                )
         `);
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS Standings (
-                TeamID INT PRIMARY KEY AUTO_INCREMENT,
-                TeamName VARCHAR(100) NOT NULL UNIQUE,
+                                                     TeamID INT PRIMARY KEY AUTO_INCREMENT,
+                                                     TeamName VARCHAR(100) NOT NULL UNIQUE,
                 MatchesPlayed INT DEFAULT 0,
                 Wins INT DEFAULT 0,
                 Losses INT DEFAULT 0,
                 Points INT DEFAULT 0,
                 GoalDifference INT DEFAULT 0,
                 CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+                )
         `);
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS PlayerStats (
-                PlayerID INT PRIMARY KEY AUTO_INCREMENT,
-                PlayerName VARCHAR(100) NOT NULL,
+                                                       PlayerID INT PRIMARY KEY AUTO_INCREMENT,
+                                                       PlayerName VARCHAR(100) NOT NULL,
                 Team VARCHAR(100),
                 Matches INT DEFAULT 0,
                 Runs INT DEFAULT 0,
                 Wickets INT DEFAULT 0,
                 Catches INT DEFAULT 0,
                 CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+                )
         `);
 
         // Insert sample data if tables are empty
         await insertSampleData();
-
         console.log(`✅ Database tables initialized`);
     } catch (error) {
         console.error(`❌ Error initializing tables:`, error.message);
@@ -135,9 +123,9 @@ async function insertSampleData() {
         if (matchRows[0].count === 0) {
             await pool.query(`
                 INSERT INTO GroupMatches (MatchDate, Team1, Team2, Venue, Stage) VALUES
-                ('2025-09-01', 'India', 'Pakistan', 'Dubai', 'Group A'),
-                ('2025-09-02', 'Sri Lanka', 'Bangladesh', 'Abu Dhabi', 'Group B'),
-                ('2025-09-03', 'Afghanistan', 'Nepal', 'Sharjah', 'Group A')
+                                                                                     ('2025-09-01', 'India', 'Pakistan', 'Dubai', 'Group A'),
+                                                                                     ('2025-09-02', 'Sri Lanka', 'Bangladesh', 'Abu Dhabi', 'Group B'),
+                                                                                     ('2025-09-03', 'Afghanistan', 'Nepal', 'Sharjah', 'Group A')
             `);
             console.log('✅ Sample matches inserted');
         }
@@ -147,10 +135,10 @@ async function insertSampleData() {
         if (standingRows[0].count === 0) {
             await pool.query(`
                 INSERT INTO Standings (TeamName, MatchesPlayed, Wins, Losses, Points, GoalDifference) VALUES
-                ('India', 2, 2, 0, 4, 15),
-                ('Pakistan', 2, 1, 1, 2, 5),
-                ('Sri Lanka', 2, 1, 1, 2, -3),
-                ('Bangladesh', 2, 0, 2, 0, -17)
+                                                                                                          ('India', 2, 2, 0, 4, 15),
+                                                                                                          ('Pakistan', 2, 1, 1, 2, 5),
+                                                                                                          ('Sri Lanka', 2, 1, 1, 2, -3),
+                                                                                                          ('Bangladesh', 2, 0, 2, 0, -17)
             `);
             console.log('✅ Sample standings inserted');
         }
@@ -160,9 +148,9 @@ async function insertSampleData() {
         if (playerRows[0].count === 0) {
             await pool.query(`
                 INSERT INTO PlayerStats (PlayerName, Team, Matches, Runs, Wickets, Catches) VALUES
-                ('Virat Kohli', 'India', 2, 156, 0, 3),
-                ('Babar Azam', 'Pakistan', 2, 128, 0, 2),
-                ('Wanindu Hasaranga', 'Sri Lanka', 2, 45, 5, 1)
+                                                                                                ('Virat Kohli', 'India', 2, 156, 0, 3),
+                                                                                                ('Babar Azam', 'Pakistan', 2, 128, 0, 2),
+                                                                                                ('Wanindu Hasaranga', 'Sri Lanka', 2, 45, 5, 1)
             `);
             console.log('✅ Sample player stats inserted');
         }
@@ -172,8 +160,9 @@ async function insertSampleData() {
 }
 
 // ========== API ENDPOINTS ==========
+// (These must come BEFORE static files)
 
-// Health check endpoint (CRITICAL for Traffic Manager)
+// Health check endpoint
 app.get('/api/health', async (req, res) => {
     const healthReport = {
         status: 'healthy',
@@ -191,18 +180,15 @@ app.get('/api/health', async (req, res) => {
     };
 
     try {
-        // Determine health status based on role
         let httpStatus = 200;
 
         if (APP_ROLE === 'primary') {
-            // Primary must have writable database
             if (!isDatabaseConnected || isDatabaseReadOnly) {
                 healthReport.status = 'degraded';
                 healthReport.message = 'Primary app cannot write to database';
-                httpStatus = 503; // Service Unavailable
+                httpStatus = 503;
             }
         } else if (APP_ROLE === 'secondary') {
-            // Secondary can have read-only database
             if (!isDatabaseConnected) {
                 healthReport.status = 'degraded';
                 healthReport.message = 'Secondary app cannot read from database';
@@ -210,7 +196,6 @@ app.get('/api/health', async (req, res) => {
             }
         }
 
-        // Additional database test if connected
         if (isDatabaseConnected && pool) {
             try {
                 await pool.query('SELECT 1');
@@ -224,7 +209,6 @@ app.get('/api/health', async (req, res) => {
         }
 
         res.status(httpStatus).json(healthReport);
-
     } catch (error) {
         console.error('Health check error:', error);
         res.status(500).json({
@@ -299,9 +283,8 @@ app.get('/api/player-stats', async (req, res) => {
     }
 });
 
-// Write endpoint (only on primary with write capability)
+// Write endpoint
 app.post('/api/match', async (req, res) => {
-    // Check if we can write
     if (isDatabaseReadOnly) {
         return res.status(423).json({
             error: 'Database is read-only',
@@ -320,7 +303,6 @@ app.post('/api/match', async (req, res) => {
 
     try {
         const { MatchDate, Team1, Team2, Venue, Stage } = req.body;
-
         if (!MatchDate || !Team1 || !Team2) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
@@ -363,7 +345,21 @@ app.get('/api/debug', (req, res) => {
     });
 });
 
-// Serve frontend
+// Test endpoint
+app.get('/api/test', (req, res) => {
+    res.json({
+        message: 'Backend is working!',
+        timestamp: new Date().toISOString(),
+        role: APP_ROLE,
+        region: REGION
+    });
+});
+
+// ========== STATIC FILES (AFTER API ROUTES) ==========
+// This line MUST come after all API routes
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Catch-all route for frontend (MUST be last)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
@@ -380,7 +376,6 @@ app.use((err, req, res, next) => {
 // ========== START SERVER ==========
 async function startServer() {
     try {
-        // Initialize database
         const dbInitialized = await initializeDatabase();
 
         if (!dbInitialized && APP_ROLE === 'primary') {
@@ -388,7 +383,6 @@ async function startServer() {
             console.warn('⚠️  Traffic Manager should fail over to secondary');
         }
 
-        // Start server
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`\n✅ Server started successfully!`);
             console.log(`🌐 URL: http://localhost:${PORT}`);
@@ -400,50 +394,11 @@ async function startServer() {
             console.log(`   Database: ${isDatabaseConnected ? '✅ Connected' : '❌ Disconnected'}`);
             console.log(`   Mode: ${isDatabaseReadOnly ? 'Read-Only' : 'Read-Write'}`);
         });
-
     } catch (error) {
         console.error('❌ Failed to start server:', error.message);
         process.exit(1);
     }
 }
-app.get('/api/test', (req, res) => {
-    res.json({
-        message: 'Backend is working!',
-        timestamp: new Date().toISOString(),
-        role: APP_ROLE,
-        region: REGION
-    });
-});
-async function testConnection() {
-    try {
-        console.log('Testing connection to:', `${window.location.origin}/api/health`);
-        const response = await fetch(`${window.location.origin}/api/health`);
 
-        console.log('Response status:', response.status);
-        console.log('Response headers:', [...response.headers.entries()]);
-
-        // Get response as text first to see what's really coming back
-        const responseText = await response.text();
-        console.log('Raw response (first 500 chars):', responseText.substring(0, 500));
-
-        // Check if it's HTML
-        if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
-            console.error('ERROR: Received HTML instead of JSON!');
-            console.error('Full response:', responseText);
-            throw new Error('Server returned HTML instead of JSON');
-        }
-
-        // Try to parse as JSON
-        const data = JSON.parse(responseText);
-        console.log('Parsed data:', data);
-
-        updateRegionInfo(data.region);
-        return data;
-    } catch (error) {
-        console.error('Connection test failed:', error);
-        updateRegionInfo('Disconnected');
-        return { status: 'Error', region: 'Disconnected', error: error.toString() };
-    }
-}
 // Start application
 startServer();

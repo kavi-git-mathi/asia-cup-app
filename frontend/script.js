@@ -60,7 +60,7 @@ async function loadAllData() {
 // Test backend connection
 async function testConnection() {
     try {
-        const response = await fetch(`${API_URL}/health`);
+        const response = await fetch(`${window.location.origin}/api/health`);
         const data = await response.json();
 
         updateRegionInfo(data.region);
