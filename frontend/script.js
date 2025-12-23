@@ -1,5 +1,6 @@
 // Configuration
-const API_URL = window.location.origin + '/api';
+// Configuration
+const API_URL = window.location.origin;
 
 // DOM Elements
 const regionInfo = document.getElementById('region-info');
