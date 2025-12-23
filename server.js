@@ -414,5 +414,36 @@ app.get('/api/test', (req, res) => {
         region: REGION
     });
 });
+async function testConnection() {
+    try {
+        console.log('Testing connection to:', `${window.location.origin}/api/health`);
+        const response = await fetch(`${window.location.origin}/api/health`);
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+
+        // Get response as text first to see what's really coming back
+        const responseText = await response.text();
+        console.log('Raw response (first 500 chars):', responseText.substring(0, 500));
+
+        // Check if it's HTML
+        if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+            console.error('ERROR: Received HTML instead of JSON!');
+            console.error('Full response:', responseText);
+            throw new Error('Server returned HTML instead of JSON');
+        }
+
+        // Try to parse as JSON
+        const data = JSON.parse(responseText);
+        console.log('Parsed data:', data);
+
+        updateRegionInfo(data.region);
+        return data;
+    } catch (error) {
+        console.error('Connection test failed:', error);
+        updateRegionInfo('Disconnected');
+        return { status: 'Error', region: 'Disconnected', error: error.toString() };
+    }
+}
 // Start application
 startServer();
