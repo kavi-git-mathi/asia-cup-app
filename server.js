@@ -7,7 +7,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*', // Or specify your frontend URL
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use('/api', (req, res, next) => {
+    // All /api routes will be handled here
+    next();
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
@@ -397,6 +406,13 @@ async function startServer() {
         process.exit(1);
     }
 }
-
+app.get('/api/test', (req, res) => {
+    res.json({
+        message: 'Backend is working!',
+        timestamp: new Date().toISOString(),
+        role: APP_ROLE,
+        region: REGION
+    });
+});
 // Start application
 startServer();
