@@ -175,32 +175,75 @@ app.get('/api/player-stats', async (req, res) => {
     }
 });
 
+// Updated /api/health endpoint
 app.get('/api/health', async (req, res) => {
+    const healthReport = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        components: {
+            appService: 'healthy',
+            database: 'unknown'
+        },
+        region: process.env.WEBSITE_LOCATION || 'unknown',
+        databaseServer: process.env.DATABASE_SERVER_TYPE || 'unknown'
+    };
+
     try {
+        // 1. Test database connection
+        let dbHealthy = false;
+        let dbError = null;
+
         if (pool) {
-            await pool.query('SELECT 1');
-            res.json({
-                status: 'OK',
-                database: 'Connected',
-                region: process.env.WEBSITE_LOCATION || 'Unknown',
-                timestamp: new Date().toISOString()
-            });
+            try {
+                await pool.query('SELECT 1');
+
+                // Additional check - verify we can read/write
+                const [result] = await pool.query('SELECT @@global.read_only as read_only');
+                const isReadOnly = result[0]?.read_only === 1;
+
+                if (isReadOnly) {
+                    healthReport.components.database = 'read-only';
+                    healthReport.databaseMode = 'read-only-replica';
+                } else {
+                    healthReport.components.database = 'healthy';
+                    healthReport.databaseMode = 'read-write-primary';
+                    dbHealthy = true;
+                }
+            } catch (dbErr) {
+                healthReport.components.database = 'unhealthy';
+                healthReport.databaseError = dbErr.message;
+                dbError = dbErr;
+            }
         } else {
-            res.status(503).json({
-                status: 'Error',
-                database: 'Disconnected',
-                message: 'Database pool not initialized'
-            });
+            healthReport.components.database = 'not-connected';
         }
-    } catch (err) {
-        res.status(500).json({
-            status: 'Error',
-            database: 'Connection failed',
-            error: err.message
-        });
+
+        // 2. Determine overall health status
+        // If database is unhealthy and we're supposed to be primary, mark as degraded
+        if (process.env.APP_ROLE === 'primary' && !dbHealthy) {
+            healthReport.status = 'degraded';
+            healthReport.overallStatus = 'UNHEALTHY - Primary DB down';
+
+            // Return 503 Service Unavailable for Traffic Manager
+            return res.status(503).json(healthReport);
+        }
+
+        // If database is healthy or we're secondary (can be read-only)
+        if (healthReport.components.database === 'healthy' ||
+            (process.env.APP_ROLE === 'secondary' && healthReport.components.database === 'read-only')) {
+            return res.status(200).json(healthReport);
+        }
+
+        // Default fallback
+        return res.status(200).json(healthReport);
+
+    } catch (error) {
+        console.error('Health check failed:', error);
+        healthReport.status = 'unhealthy';
+        healthReport.error = error.message;
+        return res.status(503).json(healthReport);
     }
 });
-
 // Serve frontend
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
