@@ -42,7 +42,7 @@ async function loadAllData() {
     try {
         const health = await testConnection();
 
-        if (health.status === 'OK') {
+        if (health.status === 'healthy' || health.status === 'OK') {
             await Promise.all([
                 loadMatches(),
                 loadStandings(),
@@ -60,9 +60,13 @@ async function loadAllData() {
 // Test backend connection
 async function testConnection() {
     try {
-        const response = await fetch(`${window.location.origin}/api/health`);
-        const data = await response.json();
+        const response = await fetch(`${API_URL}/api/health`);
 
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
         updateRegionInfo(data.region);
         return data;
     } catch (error) {
@@ -84,11 +88,11 @@ async function loadMatches() {
     try {
         matchesContainer.innerHTML = '<div class="loading">Loading matches...</div>';
 
-        const response = await fetch(`${API_URL}/group-matches`);
+        const response = await fetch(`${API_URL}/api/group-matches`);
         if (!response.ok) throw new Error('Failed to fetch matches');
 
-        const matches = await response.json();
-        displayMatches(matches);
+        const data = await response.json();
+        displayMatches(data.data);
     } catch (error) {
         console.error('Error loading matches:', error);
         matchesContainer.innerHTML = '<div class="error-message">Failed to load matches</div>';
@@ -100,11 +104,11 @@ async function loadStandings() {
     try {
         standingsContainer.innerHTML = '<div class="loading">Loading standings...</div>';
 
-        const response = await fetch(`${API_URL}/standings`);
+        const response = await fetch(`${API_URL}/api/standings`);
         if (!response.ok) throw new Error('Failed to fetch standings');
 
-        const standings = await response.json();
-        displayStandings(standings);
+        const data = await response.json();
+        displayStandings(data.data);
     } catch (error) {
         console.error('Error loading standings:', error);
         standingsContainer.innerHTML = '<div class="error-message">Failed to load standings</div>';
@@ -116,11 +120,11 @@ async function loadPlayerStats() {
     try {
         statsContainer.innerHTML = '<div class="loading">Loading player stats...</div>';
 
-        const response = await fetch(`${API_URL}/player-stats`);
+        const response = await fetch(`${API_URL}/api/player-stats`);
         if (!response.ok) throw new Error('Failed to fetch player stats');
 
-        const stats = await response.json();
-        displayPlayerStats(stats);
+        const data = await response.json();
+        displayPlayerStats(data.data);
     } catch (error) {
         console.error('Error loading player stats:', error);
         statsContainer.innerHTML = '<div class="error-message">Failed to load player stats</div>';
