@@ -14,15 +14,27 @@ app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Database configuration
 const dbConfig = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_SERVER,
-    database: process.env.DB_NAME,
+    user: process.env.AZURE_SQL_USERNAME,
+    password: process.env.AZURE_SQL_PASSWORD,
+    server: process.env.AZURE_SQL_SERVER,
+    database: process.env.AZURE_SQL_DATABASE,
+    port: parseInt(process.env.AZURE_SQL_PORT) || 1433,
     options: {
         encrypt: true,
         trustServerCertificate: false
+    },
+    pool: {
+        max: 10,
+        min: 0,
+        createRetryIntervalMillis: 5000
     }
 };
+
+console.log('📋 Environment Variables Check:');
+console.log('AZURE_SQL_USERNAME:', process.env.AZURE_SQL_USERNAME ? '✓ Set' : '✗ Missing');
+console.log('AZURE_SQL_SERVER:', process.env.AZURE_SQL_SERVER ? '✓ Set' : '✗ Missing');
+console.log('AZURE_SQL_DATABASE:', process.env.AZURE_SQL_DATABASE ? '✓ Set' : '✗ Missing');
+console.log('DB_USER (your code expects):', process.env.DB_USER ? '✓ Set' : '✗ Missing');
 
 // Database connection
 let pool;
